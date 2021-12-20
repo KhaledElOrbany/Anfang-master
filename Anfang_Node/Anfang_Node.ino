@@ -1,20 +1,44 @@
-#include "Connect.h"
+#include <ESP8266WiFi.h>
+#include <espnow.h>
+#include <FirebaseArduino.h>
 
-Connect connection;
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>
+#include <Arduino.h>
+
+#define FIREBASE_HOST "fir-demo-7221e.firebaseio.com"
+#define FIREBASE_AUTH "O4YFLC8gchXku2fOLDyxEGofDfjCYFanGQTqYIL1"
 
 #define MY_NAME         "CONTROLLER_NODE"
 #define MY_ROLE         ESP_NOW_ROLE_CONTROLLER         // set the role of this device: CONTROLLER, SLAVE, COMBO
 #define RECEIVER_ROLE   ESP_NOW_ROLE_SLAVE              // set the role of the receiver
 #define WIFI_CHANNEL    1
 
-// please update this with the MAC address of the receiver
-uint8_t receiverAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t receiverAddress[] = {0x50, 0x02, 0x91, 0xE0, 0xE1, 0xB6};
 
 struct __attribute__((packed)) dataPacket {
   int data;
 };
 
+enum WifiState {
+  wifiIsClosed, wifiIsOpened
+} wifiState = wifiIsOpened;
+
+String nodeId = "plug00";
+String path = "/hm01/plugs/" + nodeId;
+
 void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFiManager wm;
+  bool res = wm.autoConnect("Node");
+  if (!res) {
+    Serial.println("Failed to connect");
+  } else {
+    Serial.println("connected...yeey :)");
+  }
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   nodeInit();
 }
 
@@ -27,13 +51,10 @@ void loop() {
 }
 
 void nodeInit() {
-  Firebase.setInt(connection.path + "wifiState", connection.wifiState);
-  while (connection.wifiState == wifiIsOpened) {
-    connection.wifiState = (WifiState) Firebase.getInt(connection.path + "wifiState");
-    if (connection.wifiState == wifiIsClosed) {
-      WiFi.disconnect();
-    }
-  }
+  closeWiFi();
+  Firebase.setInt(path + "/wifiState", wifiState);
+  Firebase.setString(path + "/nodeMacAddress", WiFi.macAddress());
+
   espNowInit();
 }
 
@@ -57,4 +78,16 @@ void transmissionComplete(uint8_t *receiver_mac, uint8_t transmissionStatus) {
     Serial.print("Error code: ");
     Serial.println(transmissionStatus);
   }
+}
+
+WifiState getWifiState() {
+  return ((WifiState) Firebase.getInt(path + "/wifiState"));
+}
+
+void openWiFi() {
+  wifiState = wifiIsOpened;
+}
+
+void closeWiFi() {
+  wifiState = wifiIsClosed;
 }
