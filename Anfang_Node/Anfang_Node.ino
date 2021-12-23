@@ -15,7 +15,7 @@
 #define RECEIVER_ROLE   ESP_NOW_ROLE_SLAVE              // set the role of the receiver
 #define WIFI_CHANNEL    1
 
-uint8_t receiverAddress[] = {0x50, 0x02, 0x91, 0xE0, 0xE1, 0xB6};
+uint8_t receiverAddress[] = {0xBC, 0xDD, 0xC2, 0x23, 0x5E, 0x4A};
 
 struct __attribute__((packed)) dataPacket {
   int data;
