@@ -2,11 +2,13 @@
 #define NODE_H value
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
 
 class Node
 {
   public:
-    Node(String, String, String);
+    Node(String, String);
   private:
     // Normal Variables
     int state;

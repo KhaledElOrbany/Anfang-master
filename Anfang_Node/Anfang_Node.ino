@@ -51,9 +51,10 @@ void loop() {
 }
 
 void nodeInit() {
-  closeWiFi();
   Firebase.setInt(path + "/wifiState", wifiState);
   Firebase.setString(path + "/nodeMacAddress", WiFi.macAddress());
+
+  closeWiFi();
 
   espNowInit();
 }
@@ -85,6 +86,7 @@ WifiState getWifiState() {
 }
 
 void openWiFi() {
+  WiFi.close();
   wifiState = wifiIsOpened;
 }
 
